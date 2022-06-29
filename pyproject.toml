@@ -14,9 +14,9 @@ dependencies = [
 ]
 
 [project.entry-points."livenodes.nodes"]
-in_biosignalsplux = "livenodes_matplotlib.in_biosignalsplux:In_biosignalsplux"
-in_muscleban = "livenodes_matplotlib.in_muscleban:In_muscleban"
-in_riot = "livenodes_matplotlib.in_riot:In_riot"
+in_biosignalsplux = "livenodes_plux.in_biosignalsplux:In_biosignalsplux"
+in_muscleban = "livenodes_plux.in_muscleban:In_muscleban"
+in_riot = "livenodes_plux.in_riot:In_riot"
 
 
 [project.optional-dependencies]

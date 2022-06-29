@@ -1,11 +1,6 @@
-import numpy as np
-
 from livenodes.sender_blocking import BlockingSender
 
-import plux
-
-
-
+from . import plux
 
 class NewDevice(plux.SignalsDev):
     """

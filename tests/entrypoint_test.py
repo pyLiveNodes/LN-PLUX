@@ -8,7 +8,7 @@ import pytest
 @pytest.fixture
 def discovered_modules():
     exclude = ['__init__', 'utils']
-    modules = glob.glob(join(dirname(__file__), '../src/livenodes_basic_nodes/', "*.py"))
+    modules = glob.glob(join(dirname(__file__), '../src/livenodes_plux/', "*.py"))
     names = [basename(f)[:-3] for f in modules if isfile(f)]
     return [f for f in names if not f in exclude]
 
@@ -22,9 +22,9 @@ class TestProcessing():
         assert set(livnodes_entrypoints) == set(discovered_modules)
 
     def test_loads_class(self):
-        draw_lines = [x.load() for x in entry_points()['livenodes.nodes'] if x.name == 'draw_lines'][0]
-        from livenodes_matplotlib.draw_lines import Draw_lines
-        assert Draw_lines == draw_lines
+        in_riot = [x.load() for x in entry_points()['livenodes.nodes'] if x.name == 'in_riot'][0]
+        from livenodes_plux.in_riot import In_riot
+        assert In_riot == in_riot
 
     def test_all_loadable(self):
         for x in entry_points()['livenodes.nodes']:
