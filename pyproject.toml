@@ -1,0 +1,43 @@
+[project]
+name = "Livenodes-PLUX"
+dynamic = ['version']
+description = "LiveNodes: node based live streaming sensor/data and visualization suite."
+authors = [
+    { name = "Yale Hartmann", email = "yale.hartmann@uni-bremen.de" }
+]
+# TODO: figure out how/if to add livenodes here... for now install manually in venv via:
+# pip install . --extra-index-url https://package_puller:8qYs4hBAsmAHJ5AdS_y9@gitlab.csl.uni-bremen.de/api/v4/groups/368/-/packages/pypi/simple
+# pip install -e . --extra-index-url https://package_puller:8qYs4hBAsmAHJ5AdS_y9@gitlab.csl.uni-bremen.de/api/v4/groups/368/-/packages/pypi/simple
+dependencies = [
+    "livenodes>=0.7.1",
+    "numpy>=1.22.1"
+]
+
+[project.entry-points."livenodes.nodes"]
+in_biosignalsplux = "livenodes_matplotlib.in_biosignalsplux:In_biosignalsplux"
+in_muscleban = "livenodes_matplotlib.in_muscleban:In_muscleban"
+in_riot = "livenodes_matplotlib.in_riot:In_riot"
+
+
+[project.optional-dependencies]
+dev = [
+    "tox",
+    "pytest>=7.0.1"
+]
+
+[build-system]
+requires = [
+    "setuptools>=48",
+    "wheel",
+    "setuptools_scm >= 2.0.0, <3",
+    "setuptools-git-versioning"
+]
+build-backend = 'setuptools.build_meta'
+
+[tool.setuptools-git-versioning]
+enabled = true
+
+[tool.black]
+line-length = 140
+target-version = ['py36']
+skip-string-normalization = true
