@@ -24,7 +24,7 @@ else:
         path = "plux-api/Win32_37"
 
 full_path = os.path.join(os.path.dirname(__file__), path)
-print('Using Plux:', full_path)
+print('Using Plux:', full_path, os.path.exists(f"{full_path}/plux.so"))
 sys.path.append(full_path)
 
 import plux
