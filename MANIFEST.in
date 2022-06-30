@@ -16,4 +16,7 @@ include CONTRIBUTING.rst
 include LICENSE
 include README.md
 
-global-exclude *.py[cod] __pycache__/* *.so *.dylib
+recursive-exclude src/ *.so *.dll
+recursive-include src/ Linux*/plux.so
+
+global-exclude *.py[cod] __pycache__/* *.dylib
