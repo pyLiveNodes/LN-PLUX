@@ -5,6 +5,7 @@ import asyncio
 import threading
 
 from livenodes.sender_blocking import BlockingSender
+from livenodes_core_nodes.port import Ports_empty, Ports_data_channels
 
 
 class In_riot(BlockingSender):
@@ -14,8 +15,8 @@ class In_riot(BlockingSender):
         "Q4", "PITCH", "YAW", "ROLL", "HEAD"
     ]
 
-    channels_in = []
-    channels_out = ['Data', 'Channel Names']
+    channels_in = Ports_empty()
+    channels_out = Ports_data_channels()
 
     category = "Data Source"
     description = ""
