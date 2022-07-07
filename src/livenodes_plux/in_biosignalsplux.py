@@ -39,8 +39,8 @@ class In_biosignalsplux(BlockingSender):
     Requires the plux libaray.
     """
 
-    channels_in = Ports_empty()
-    channels_out = Ports_data_channels()
+    ports_in = Ports_empty()
+    ports_out = Ports_data_channels()
 
     category = "Data Source"
     description = ""
