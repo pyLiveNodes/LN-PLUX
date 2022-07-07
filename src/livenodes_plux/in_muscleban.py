@@ -32,7 +32,7 @@ class NewDevice(plux.SignalsDev):
     # It seems to work best when activating the plux hub and shortly after starting the pipline in qt interface
     # (which is weird) as on command line the timing is not important at all...
 
-from livenodes_core_nodes.port import Ports_empty, Ports_data_channels
+from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels
 
 class In_muscleban(BlockingSender):
     """

@@ -5,7 +5,7 @@ import asyncio
 import threading
 
 from livenodes.sender_blocking import BlockingSender
-from livenodes_core_nodes.port import Ports_empty, Ports_data_channels
+from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels
 
 
 class In_riot(BlockingSender):
