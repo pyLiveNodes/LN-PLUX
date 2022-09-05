@@ -90,9 +90,9 @@ class In_biosignalsplux(BlockingSender):
             # d = np.array(data)
             # if nSeq % 1000 == 0:
             #     print(nSeq, d, d.shape)
-            self._emit_data([[data]])
+            self._emit_data([[data]], channel=self.ports_out.data)
 
-        self._emit_data(self.channel_names, channel="Channel Names")
+        self._emit_data(self.channel_names, channel=self.ports_out.channels)
 
         self.device = NewDevice(self.adr)
         self.device.frequency = self.freq
