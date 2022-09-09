@@ -1,4 +1,4 @@
-from livenodes.sender_blocking import BlockingSender
+from livenodes.producer import Producer
 
 from . import plux
 
@@ -30,7 +30,7 @@ class NewDevice(plux.SignalsDev):
 
 from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels
 
-class In_biosignalsplux(BlockingSender):
+class In_biosignalsplux(Producer):
     """
     Feeds data frames from a biosiagnal plux based device into the pipeline.
 
@@ -91,6 +91,7 @@ class In_biosignalsplux(BlockingSender):
             # if nSeq % 1000 == 0:
             #     print(nSeq, d, d.shape)
             self._emit_data([[data]], channel=self.ports_out.data)
+            self._clock.tick()
 
         self._emit_data(self.channel_names, channel=self.ports_out.channels)
 

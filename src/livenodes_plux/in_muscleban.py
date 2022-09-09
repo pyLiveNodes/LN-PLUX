@@ -1,7 +1,7 @@
 import numpy as np
 import time
 
-from livenodes.sender_blocking import BlockingSender
+from livenodes.producer import Producer
 
 from . import plux
 
@@ -34,7 +34,7 @@ class NewDevice(plux.SignalsDev):
 
 from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels
 
-class In_muscleban(BlockingSender):
+class In_muscleban(Producer):
     """
     Feeds data frames from a biosiagnal plux based device into the pipeline.
 
@@ -115,6 +115,7 @@ class In_muscleban(BlockingSender):
             # if nSeq % 1000 == 0:
             #     print(nSeq, d, d.shape)
             self._emit_data(np.array([[data]]) / 2**15 - 1)
+            self._clock.tick()
 
         self._emit_data(self.channel_names, channel="Channel Names")
 
