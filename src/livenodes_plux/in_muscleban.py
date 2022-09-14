@@ -1,7 +1,6 @@
+from livenodes.producer_blocking import Producer_Blocking
 import numpy as np
 import time
-
-from livenodes.producer import Producer
 
 from . import plux
 
@@ -16,25 +15,25 @@ class NewDevice(plux.SignalsDev):
         plux.MemoryDev.__init__(address)
         self.onRawFrame = lambda _: None
 
-    # From the doc/examples:
-    #
-    # https://github.com/biosignalsplux/python-samples/blob/master/MultipleDeviceThreadingExample.py
-    # Supported channel number codes:
-    # {1 channel - 0x01, 2 channels - 0x03, 3 channels - 0x07
-    # 4 channels - 0x0F, 5 channels - 0x1F, 6 channels - 0x3F
-    # 7 channels - 0x7F, 8 channels - 0xFF}
-    # Maximum acquisition frequencies for number of channels:
-    # 1 channel - 8000, 2 channels - 5000, 3 channels - 4000
-    # 4 channels - 3000, 5 channels - 3000, 6 channels - 2000
-    # 7 channels - 2000, 8 channels - 2000
+# From the doc/examples:
+#
+# https://github.com/biosignalsplux/python-samples/blob/master/MultipleDeviceThreadingExample.py
+# Supported channel number codes:
+# {1 channel - 0x01, 2 channels - 0x03, 3 channels - 0x07
+# 4 channels - 0x0F, 5 channels - 0x1F, 6 channels - 0x3F
+# 7 channels - 0x7F, 8 channels - 0xFF}
+# Maximum acquisition frequencies for number of channels:
+# 1 channel - 8000, 2 channels - 5000, 3 channels - 4000
+# 4 channels - 3000, 5 channels - 3000, 6 channels - 2000
+# 7 channels - 2000, 8 channels - 2000
 
-    # DEBUG NOTE:
-    # It seems to work best when activating the plux hub and shortly after starting the pipline in qt interface
-    # (which is weird) as on command line the timing is not important at all...
+# DEBUG NOTE:
+# It seems to work best when activating the plux hub and shortly after starting the pipline in qt interface
+# (which is weird) as on command line the timing is not important at all...
 
 from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels
 
-class In_muscleban(Producer):
+class In_muscleban(Producer_Blocking):
     """
     Feeds data frames from a biosiagnal plux based device into the pipeline.
 
@@ -81,16 +80,16 @@ class In_muscleban(Producer):
             "n_bits": self.n_bits
         }
 
-    def _onstop(self):
-        self.device.stop()
-        self.device.close()
-
-    def _onstart(self):
+    def _blocking_onstart(self):
         """
         Streams the data and calls frame callbacks for each frame.
         """
+        print(f'Connecting MuscleBan: {self.adr}')
+        last_seen = 0 
+        is_stopped = self.stop_event
 
         def onRawFrame(nSeq, data):
+            nonlocal last_seen, is_stopped
             # nonlocal self
             # array = np.asarray(data).astype(float)
             # for x in range(len(array)):
@@ -114,12 +113,25 @@ class In_muscleban(Producer):
             # d = np.array(data)
             # if nSeq % 1000 == 0:
             #     print(nSeq, d, d.shape)
-            self._emit_data(np.array([[data]]) / 2**15 - 1)
-            self._clock.tick()
+            if last_seen + 1 < nSeq:
+                print(f'Dropped {nSeq - last_seen} frames')
+            self.msgs.put_nowait((np.array([[data]]) / 2**15 - 1, 'data', True))
+            last_seen = nSeq
+            # return not is_stopped.is_set()
 
-        self._emit_data(self.channel_names, channel="Channel Names")
+        self.msgs.put_nowait((self.channel_names, "channels", False))
+        # print('Lets go twice! ----------------')
+        # while not self.stop_event.is_set():
+        #     # print('Lets go another time! ----------------')
+        #     self.msgs.put_nowait((np.random.rand(1, 1, 7), "data", True))
+        #     time.sleep(0.0001)
+        #     if np.random.rand() > 0.95:
+        #         raise Exception('Lets test this')
+        # print('Lets finish! ----------------')
+
 
         self.device = NewDevice(self.adr)
+
 
         # TODO: consider moving the start into the init and assign noop, then here overwrite noop with onRawFrame
         # Idea: connect pretty much as soon as possible, but only pass data once the rest is also ready
@@ -143,10 +155,15 @@ class In_muscleban(Producer):
         
         self.device.start(self.freq, [emg_channel_src, acc_mag_channel_src])
         
-        # calls self.device.onRawFrame until it returns True
+        
+        self.info(f'Battery status for {self.adr}: {self.device.getBattery()}')
+        # # calls self.device.onRawFrame until it returns True
         try:
             self.device.loop() 
         except RuntimeError:
-            self.info('Connection lost, trying to reconnect.')
+            self.error('Connection lost, trying to reconnect.')
             time.sleep(0.1)
-            self._onstart()
+            self._blocking_onstart()
+
+        self.device.stop()
+        self.device.close()

@@ -110,7 +110,7 @@ class In_riot(Producer):
         disp = Dispatcher()
         disp.map(f"/{self.id}/raw", onRawFrame)
 
-        self._emit_data(self.channels, channel="Channel Names")
+        self._emit_data(self.channels, channel=self.ports_out.channels)
 
         server = BlockingOSCUDPServer((self.listen_ip, self.listen_port), disp)
         # server = ForkingOSCUDPServer((self.listen_ip, self.listen_port), disp)
