@@ -53,6 +53,7 @@ class In_muscleban(Producer_Blocking):
         "freq": 100,
         "n_bits": 16,
         "name": "Biosignalsplux",
+        "emit_at_once": 5
     }
 
     channel_names = [ "EMG1",
@@ -64,12 +65,18 @@ class In_muscleban(Producer_Blocking):
                  freq,
                  n_bits=16,
                  name="Biosignalsplux",
+                 emit_at_once=None,
                  **kwargs):
         super().__init__(name, **kwargs)
 
         self.adr = adr
         self.freq = freq
         self.n_bits = n_bits
+        if emit_at_once is not None:
+            self.emit_at_once = emit_at_once
+        else:
+            # per default make the whole thing update not more than 100 times per second
+            self.emit_at_once = max(int(freq / 100.), 1)
 
         self.device = None
 
@@ -77,7 +84,8 @@ class In_muscleban(Producer_Blocking):
         return {\
             "adr": self.adr,
             "freq": self.freq,
-            "n_bits": self.n_bits
+            "n_bits": self.n_bits,
+            "emit_at_once": self.emit_at_once
         }
 
     def _blocking_onstart(self):
@@ -87,9 +95,11 @@ class In_muscleban(Producer_Blocking):
         print(f'Connecting MuscleBan: {self.adr}')
         last_seen = 0 
         is_stopped = self.stop_event
+        buffer = []
+        emit_at_once = self.emit_at_once
 
         def onRawFrame(nSeq, data):
-            nonlocal last_seen, is_stopped
+            nonlocal last_seen, is_stopped, buffer, emit_at_once
             # nonlocal self
             # array = np.asarray(data).astype(float)
             # for x in range(len(array)):
@@ -115,8 +125,12 @@ class In_muscleban(Producer_Blocking):
             #     print(nSeq, d, d.shape)
             if last_seen + 1 < nSeq:
                 print(f'Dropped {nSeq - last_seen} frames')
-            self.msgs.put_nowait((np.array([[data]]) / 2**15 - 1, 'data', True))
+            buffer.append(data)
             last_seen = nSeq
+
+            if len(buffer) >= emit_at_once:
+                self.msgs.put_nowait((np.array([buffer]) / 2**15 - 1, 'data', True))
+                buffer = []
             # return not is_stopped.is_set()
 
         self.msgs.put_nowait((self.channel_names, "channels", False))
