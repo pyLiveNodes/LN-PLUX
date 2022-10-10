@@ -172,12 +172,12 @@ class In_muscleban(Producer_Blocking):
         
         self.info(f'Battery status for {self.adr}: {self.device.getBattery()}')
         # # calls self.device.onRawFrame until it returns True
-        try:
-            self.device.loop() 
-        except RuntimeError:
-            self.error('Connection lost, trying to reconnect.')
-            time.sleep(0.1)
-            self._blocking_onstart()
+        # try:
+        self.device.loop() 
+        # except RuntimeError:
+        #     self.error('Connection lost, trying to reconnect.')
+        #     time.sleep(0.1)
+        #     self._blocking_onstart()
 
         self.device.stop()
         self.device.close()
