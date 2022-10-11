@@ -1,3 +1,4 @@
+from typing import NamedTuple
 from livenodes.producer_blocking import Producer_Blocking
 import numpy as np
 import time
@@ -31,7 +32,14 @@ class NewDevice(plux.SignalsDev):
 # It seems to work best when activating the plux hub and shortly after starting the pipline in qt interface
 # (which is weird) as on command line the timing is not important at all...
 
-from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels
+from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels, Port_Data, Port_Vector_of_Strings, Port_Single_Channel_Int, Port_Str
+
+class Ports_out(NamedTuple):
+    data: Port_Data = Port_Data("Data")
+    channels: Port_Vector_of_Strings = Port_Vector_of_Strings("Channel Names")
+    battery: Port_Single_Channel_Int = Port_Single_Channel_Int("Battery")
+    status: Port_Str = Port_Str("Status")
+
 
 class In_muscleban(Producer_Blocking):
     """
@@ -43,7 +51,7 @@ class In_muscleban(Producer_Blocking):
     """
 
     ports_in = Ports_empty()
-    ports_out = Ports_data_channels()
+    ports_out = Ports_out()
 
     category = "Data Source"
     description = ""
@@ -88,18 +96,18 @@ class In_muscleban(Producer_Blocking):
             "emit_at_once": self.emit_at_once
         }
 
-    def _blocking_onstart(self):
+    def _blocking_onstart(self, stop_event):
         """
         Streams the data and calls frame callbacks for each frame.
         """
-        print(f'Connecting MuscleBan: {self.adr}')
+        self.info(f'Connecting MuscleBan: {self.adr}')
+        self.msgs.put_nowait((f'Connecting MuscleBan: {self.adr}', "status", False))
         last_seen = 0 
-        is_stopped = self.stop_event
         buffer = []
         emit_at_once = self.emit_at_once
 
         def onRawFrame(nSeq, data):
-            nonlocal last_seen, is_stopped, buffer, emit_at_once
+            nonlocal last_seen, stop_event, buffer, emit_at_once
             # nonlocal self
             # array = np.asarray(data).astype(float)
             # for x in range(len(array)):
@@ -125,13 +133,15 @@ class In_muscleban(Producer_Blocking):
             #     print(nSeq, d, d.shape)
             if last_seen + 1 < nSeq:
                 print(f'Dropped {nSeq - last_seen} frames')
+            if nSeq % self.freq * 60 == 0:
+                self.msgs.put_nowait((self.device.getBattery(), "battery", False))
             buffer.append(data)
             last_seen = nSeq
 
             if len(buffer) >= emit_at_once:
                 self.msgs.put_nowait((np.array([buffer]) / 2**15 - 1, 'data', True))
                 buffer = []
-            # return not is_stopped.is_set()
+            return stop_event.is_set()
 
         self.msgs.put_nowait((self.channel_names, "channels", False))
         # print('Lets go twice! ----------------')
@@ -145,6 +155,7 @@ class In_muscleban(Producer_Blocking):
 
 
         self.device = NewDevice(self.adr)
+        self.msgs.put_nowait((f'Connected MuscleBan: {self.adr}', "status", False))
 
 
         # TODO: consider moving the start into the init and assign noop, then here overwrite noop with onRawFrame
@@ -168,9 +179,11 @@ class In_muscleban(Producer_Blocking):
         acc_mag_channel_src.chMask = 0x3F # 0x3F to activate the 6 sources (3xACC + 3xMAG) of the Accelerometer and Magnetometer sensors.
         
         self.device.start(self.freq, [emg_channel_src, acc_mag_channel_src])
+        self.msgs.put_nowait((f'Looping MuscleBan: {self.adr}', "status", False))
         
-        
-        self.info(f'Battery status for {self.adr}: {self.device.getBattery()}')
+        # self.info(f'Battery status for {self.adr}: {self.device.getBattery()}')
+        # self.msgs.put_nowait((self.device.getBattery(), "battery", False))
+
         # # calls self.device.onRawFrame until it returns True
         # try:
         self.device.loop() 
@@ -181,3 +194,4 @@ class In_muscleban(Producer_Blocking):
 
         self.device.stop()
         self.device.close()
+        self.msgs.put_nowait((f'Stopped and closed MuscleBan: {self.adr}', "status", False))
