@@ -19,6 +19,7 @@ dependencies = [
 in_biosignalsplux = "livenodes_plux.in_biosignalsplux:In_biosignalsplux"
 in_muscleban = "livenodes_plux.in_muscleban:In_muscleban"
 in_riot = "livenodes_plux.in_riot:In_riot"
+transform_plux_scale = "livenodes_plux.transform_plux_scale:Transform_plux_scale"
 
 
 [project.optional-dependencies]
