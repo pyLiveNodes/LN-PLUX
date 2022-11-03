@@ -1,3 +1,4 @@
+import json
 from typing import NamedTuple
 from livenodes.producer_blocking import Producer_Blocking
 import numpy as np
@@ -178,8 +179,16 @@ class In_muscleban(Producer_Blocking):
         acc_mag_channel_src.nBits = self.n_bits
         acc_mag_channel_src.chMask = 0x3F # 0x3F to activate the 6 sources (3xACC + 3xMAG) of the Accelerometer and Magnetometer sensors.
         
+
         self.device.start(self.freq, [emg_channel_src, acc_mag_channel_src])
-        self.msgs.put_nowait((f'Looping MuscleBan: {self.adr}', "status", False))
+        
+        device_info = self.device.getProperties()
+        self.info("Properties: ", json.dumps(device_info))
+        
+        tmp_msg = f"Looping MuscleBan: {self.adr}\n"
+        for key, val in device_info.items():
+            tmp_msg += f'\n {key}: {val}'
+        self.msgs.put_nowait((tmp_msg, "status", False))
         
         # self.info(f'Battery status for {self.adr}: {self.device.getBattery()}')
         # self.msgs.put_nowait((self.device.getBattery(), "battery", False))
