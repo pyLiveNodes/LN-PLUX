@@ -179,7 +179,8 @@ class In_muscleban(Producer_Blocking):
         acc_mag_channel_src.nBits = self.n_bits
         acc_mag_channel_src.chMask = 0x3F # 0x3F to activate the 6 sources (3xACC + 3xMAG) of the Accelerometer and Magnetometer sensors.
         
-
+        # TODO: add try catch if fails with communication port does not exist emit a list of bluetooth signals / mac addresses received
+        # Maybe even add a __init__ option to try and reset bluetooth connection to this device if this happens and only if that fails, throw an errro
         self.device.start(self.freq, [emg_channel_src, acc_mag_channel_src])
         
         device_info = self.device.getProperties()
