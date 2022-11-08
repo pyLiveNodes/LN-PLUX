@@ -58,10 +58,11 @@ class TestProcessing():
                 try: 
                     if example_node._should_process(**example_values):
                         res = example_node.process(**example_values)
+                        print(res)
                 except:
                     pass
                 
                 if res is not None:
                     for key in res:
-                        if key not in example_node.ports_out:
-                            raise ValueError(f'{key} is no valid out port for {example_node}')
+                        if key not in example_node.ports_out._fields:
+                            raise ValueError(f'"{key}" is no valid out port for {example_node}', example_node.ports_out._fields)
