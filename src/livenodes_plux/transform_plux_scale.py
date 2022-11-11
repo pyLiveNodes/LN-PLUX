@@ -15,5 +15,4 @@ class Transform_plux_scale(Node):
         return data is not None
 
     def process(self, data, **kwargs):
-        res = (np.array(data) - 2**15) / 2**16
-        return self.ret(data=res)
+        return self.ret(data=(np.array(data) / 2**15) - 1)
