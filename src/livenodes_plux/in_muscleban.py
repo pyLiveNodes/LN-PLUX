@@ -33,12 +33,12 @@ class NewDevice(plux.SignalsDev):
 # It seems to work best when activating the plux hub and shortly after starting the pipline in qt interface
 # (which is weird) as on command line the timing is not important at all...
 
-from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels, Port_Data, Port_Vector_of_Strings, Port_Single_Channel_Int, Port_Str
+from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels, Port_Data, Port_List_Str, Port_Int, Port_Str
 
 class Ports_out(NamedTuple):
     data: Port_Data = Port_Data("Data")
-    channels: Port_Vector_of_Strings = Port_Vector_of_Strings("Channel Names")
-    battery: Port_Single_Channel_Int = Port_Single_Channel_Int("Battery")
+    channels: Port_List_Str = Port_List_Str("Channel Names")
+    battery: Port_Int = Port_Int("Battery")
     status: Port_Str = Port_Str("Status")
 
 
