@@ -135,7 +135,7 @@ class In_muscleban(Producer_Blocking):
             if last_seen + 1 < nSeq:
                 print(f'Dropped {nSeq - last_seen} frames')
             if nSeq % self.freq * 60 * 2 == 0:
-                self.msgs.put_nowait((self.device.getBattery(), "battery", False))
+                self.msgs.put_nowait((int(self.device.getBattery()), "battery", False))
             buffer.append(data)
             last_seen = nSeq
 
