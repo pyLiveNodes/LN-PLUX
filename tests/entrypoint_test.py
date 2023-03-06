@@ -19,6 +19,7 @@ class TestProcessing():
     def test_all_declared(self, discovered_modules):
         livnodes_entrypoints = [x.name for x in entry_points()['livenodes.nodes']]
 
+        print(set(discovered_modules).difference(set(livnodes_entrypoints)))
         assert set(discovered_modules) <= set(livnodes_entrypoints)
 
     def test_loads_class(self):

@@ -17,17 +17,23 @@ extensions = [
 ]
 source_suffix = ['.rst', '.md']
 master_doc = 'index'
-project = 'LiveNodes'
+project = 'LN PLUX'
 year = '2022'
 author = 'Yale Hartmann'
 copyright = '{0}, {1}'.format(year, author)
-version = release = '0.7.0'
+
+# determine version number
+import re
+# The full version, including alpha/beta/rc tags.
+release = re.sub('^v', '', os.popen('git describe').read().strip())
+# The short X.Y version.
+version = release
 
 pygments_style = 'trac'
 templates_path = ['.']
 extlinks = {
-    'issue': ('https://gitlab.csl.uni-bremen.de/yale1/livenodes/issues/%s', '#'),
-    'pr': ('https://gitlab.csl.uni-bremen.de/yale1/livenodes/pull/%s', 'PR #'),
+    'issue': ('https://gitlab.csl.uni-bremen.de/livenodes/livenodes/issues/%s', '#'),
+    'pr': ('https://gitlab.csl.uni-bremen.de/livenodes/livenodes/pull/%s', 'PR #'),
 }
 # on_rtd is whether we are on readthedocs.org
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'

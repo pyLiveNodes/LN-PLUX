@@ -4,19 +4,19 @@ from pythonosc.dispatcher import Dispatcher
 import asyncio
 import threading
 
-from livenodes.sender_blocking import BlockingSender
+from livenodes.producer import Producer
 from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels
 
 
-class In_riot(BlockingSender):
+class In_riot(Producer):
     channels = [
         "ACC_X", "ACC_Y", "ACC_Z", "GYRO_X", "GYRO_Y", "GYRO_Z", "MAG_X",
         "MAG_Y", "MAG_Z", "TEMP", "IO", "A1", "A2", "C", "Q1", "Q2", "Q3",
         "Q4", "PITCH", "YAW", "ROLL", "HEAD"
     ]
 
-    channels_in = Ports_empty()
-    channels_out = Ports_data_channels()
+    ports_in = Ports_empty()
+    ports_out = Ports_data_channels()
 
     category = "Data Source"
     description = ""
@@ -103,13 +103,14 @@ class In_riot(BlockingSender):
             # print(addr, data)
             # print(addr, np.array(data).shape)
             self._emit_data([[np.array(list(data)) * factors]])
+            self._clock.tick()
             # self._emit_data([data])
 
         self.info('Starting server')
         disp = Dispatcher()
         disp.map(f"/{self.id}/raw", onRawFrame)
 
-        self._emit_data(self.channels, channel="Channel Names")
+        self._emit_data(self.channels, channel=self.ports_out.channels)
 
         server = BlockingOSCUDPServer((self.listen_ip, self.listen_port), disp)
         # server = ForkingOSCUDPServer((self.listen_ip, self.listen_port), disp)

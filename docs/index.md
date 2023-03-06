@@ -1,4 +1,4 @@
-# Livenodes
+# LN PLUX
 
 ```{eval-rst}
 .. toctree::
