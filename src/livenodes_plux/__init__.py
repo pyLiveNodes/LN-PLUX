@@ -15,6 +15,8 @@ osDic = {
 if platform.system() != "Windows":
     if platform.machine() == 'aarch64':
         path = f"plux-api/LinuxARM64_38"
+    elif osDic[platform.system()] == 'MacOS':
+        path = f"plux-api/MacOS/Intel3.8"
     else:
         path = f"plux-api/{osDic[platform.system()]}"
 else:
