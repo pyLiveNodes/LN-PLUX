@@ -2,6 +2,7 @@
 
 ```{eval-rst}
 .. toctree::
+    :caption: Start
     :maxdepth: 2
 
     readme.rst
