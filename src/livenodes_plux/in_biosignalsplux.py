@@ -1,4 +1,8 @@
-from livenodes.producer import Producer
+from typing import NamedTuple
+import numpy as np
+
+from livenodes.producer_blocking import Producer_Blocking
+from livenodes_core_nodes.ports import Ports_empty, Port_Data, Port_List_Str, Port_Str
 
 from . import plux
 
@@ -28,9 +32,12 @@ class NewDevice(plux.SignalsDev):
     # It seems to work best when activating the plux hub and shortly after starting the pipline in qt interface
     # (which is weird) as on command line the timing is not important at all...
 
-from livenodes_core_nodes.ports import Ports_empty, Ports_data_channels
+class Ports_out(NamedTuple):
+    data: Port_Data = Port_Data("Data")
+    channels: Port_List_Str = Port_List_Str("Channel Names")
+    status: Port_Str = Port_Str("Status")
 
-class In_biosignalsplux(Producer):
+class In_biosignalsplux(Producer_Blocking):
     """
     Feeds data frames from a biosiagnal plux based device into the pipeline.
 
@@ -40,7 +47,7 @@ class In_biosignalsplux(Producer):
     """
 
     ports_in = Ports_empty()
-    ports_out = Ports_data_channels()
+    ports_out = Ports_out()
 
     category = "Data Source"
     description = ""
@@ -77,26 +84,36 @@ class In_biosignalsplux(Producer):
             "channel_names": self.channel_names
         }
 
-    def _onstop(self):
-        self.device.stop()
-        self.device.close()
-
-    def _onstart(self):
+    def _blocking_onstart(self, stop_event):
         """
         Streams the data and calls frame callbacks for each frame.
         """
+        self.info(f'Connecting BiosignalsPluxHub: {self.adr}')
+        self.msgs.put_nowait((f'Connecting BiosignalsPluxHub: {self.adr}', "status", False))
+
+        last_seen = 0 
+        buffer = []
+        emit_at_once = self.emit_at_once
 
         def onRawFrame(nSeq, data):
-            # d = np.array(data)
-            # if nSeq % 1000 == 0:
-            #     print(nSeq, d, d.shape)
-            self._emit_data([[data]], channel=self.ports_out.data)
-            self._clock.tick()
+            nonlocal last_seen, stop_event, buffer, emit_at_once
 
-        self._emit_data(self.channel_names, channel=self.ports_out.channels)
+            if last_seen + 1 < nSeq:
+                print(f'Dropped {nSeq - last_seen} frames')
+            buffer.append(list(data))
+            last_seen = nSeq
+
+            if len(buffer) >= emit_at_once:
+                self.msgs.put_nowait((np.array([buffer]) / 2**15 - 1, 'data', True))
+                buffer = []
+            return stop_event.is_set()
+        
+        self.msgs.put_nowait((self.channel_names, "channels", False))
 
         self.device = NewDevice(self.adr)
         self.device.frequency = self.freq
+
+        self.msgs.put_nowait((f'Connected BiosignalsPluxHub: {self.adr}', "status", False))
 
         # TODO: consider moving the start into the init and assign noop, then here overwrite noop with onRawFrame
         # Idea: connect pretty much as soon as possible, but only pass data once the rest is also ready
@@ -108,3 +125,7 @@ class In_biosignalsplux(Producer):
                           2**len(self.channel_names) - 1, self.n_bits)
         self.device.loop(
         )  # calls self.device.onRawFrame until it returns True
+
+        self.device.stop()
+        self.device.close()
+        self.msgs.put_nowait((f'Stopped and closed BiosignalsPluxHub: {self.adr}', "status", False))
