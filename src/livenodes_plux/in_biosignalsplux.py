@@ -6,6 +6,7 @@ from livenodes_core_nodes.ports import Ports_empty, Port_Data, Port_List_Str, Po
 
 from . import plux
 
+
 class NewDevice(plux.SignalsDev):
     """
     Stub for a Plux based device.
@@ -32,10 +33,12 @@ class NewDevice(plux.SignalsDev):
     # It seems to work best when activating the plux hub and shortly after starting the pipline in qt interface
     # (which is weird) as on command line the timing is not important at all...
 
+
 class Ports_out(NamedTuple):
     data: Port_Data = Port_Data("Data")
     channels: Port_List_Str = Port_List_Str("Channel Names")
     status: Port_Str = Port_Str("Status")
+
 
 class In_biosignalsplux(Producer_Blocking):
     """
@@ -57,6 +60,7 @@ class In_biosignalsplux(Producer_Blocking):
         "freq": 100,
         "channel_names": ["Channel 1"],
         "n_bits": 16,
+        "emit_at_once": 10,
         "name": "Biosignalsplux",
     }
 
@@ -65,6 +69,7 @@ class In_biosignalsplux(Producer_Blocking):
                  freq,
                  channel_names=[],
                  n_bits=16,
+                 emit_at_once=10,
                  name="Biosignalsplux",
                  **kwargs):
         super().__init__(name, **kwargs)
@@ -72,15 +77,17 @@ class In_biosignalsplux(Producer_Blocking):
         self.adr = adr
         self.freq = freq
         self.n_bits = n_bits
+        self.emit_at_once = emit_at_once
         self.channel_names = channel_names
 
         self.device = None
 
     def _settings(self):
-        return {\
+        return { \
             "adr": self.adr,
             "freq": self.freq,
             "n_bits": self.n_bits,
+            "emit_at_once": self.emit_at_once,
             "channel_names": self.channel_names
         }
 
@@ -91,7 +98,7 @@ class In_biosignalsplux(Producer_Blocking):
         self.info(f'Connecting BiosignalsPluxHub: {self.adr}')
         self.msgs.put_nowait((f'Connecting BiosignalsPluxHub: {self.adr}', "status", False))
 
-        last_seen = 0 
+        last_seen = 0
         buffer = []
         emit_at_once = self.emit_at_once
 
@@ -104,10 +111,10 @@ class In_biosignalsplux(Producer_Blocking):
             last_seen = nSeq
 
             if len(buffer) >= emit_at_once:
-                self.msgs.put_nowait((np.array([buffer]) / 2**15 - 1, 'data', True))
+                self.msgs.put_nowait((np.array([buffer]), 'data', True))
                 buffer = []
             return stop_event.is_set()
-        
+
         self.msgs.put_nowait((self.channel_names, "channels", False))
 
         self.device = NewDevice(self.adr)
@@ -122,7 +129,7 @@ class In_biosignalsplux(Producer_Blocking):
         # self.device.start(self.device.frequency, 0x01, 16)
         # convert len of channel_names to bit mask for start (see top, or: https://github.com/biosignalsplux/python-samples/blob/master/MultipleDeviceThreadingExample.py)
         self.device.start(self.device.frequency,
-                          2**len(self.channel_names) - 1, self.n_bits)
+                          2 ** len(self.channel_names) - 1, self.n_bits)
         self.device.loop(
         )  # calls self.device.onRawFrame until it returns True
 
