@@ -1,3 +1,6 @@
+[![Format and Test](https://github.com/pyLiveNodes/LN-PLUX/actions/workflows/format_test.yml/badge.svg)](https://github.com/pyLiveNodes/LN-PLUX/actions/workflows/format_test.yml)
+[![Publish](https://github.com/pyLiveNodes/LN-PLUX/actions/workflows/publish.yml/badge.svg)](https://github.com/pyLiveNodes/LN-PLUX/actions/workflows/publish.yml)
+
 # LN PLUX
 
 The Livenodes PLUX package provides recording nodes for the PLUX family of sensors including the MuscleBan, BiosignalsHub and RIoT sensor platforms.
